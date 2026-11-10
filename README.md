@@ -56,7 +56,8 @@ Pending: run eval/run_ablation.py and paste the table here.
 <img width="1398" height="888" alt="image" src="https://github.com/user-attachments/assets/614641fe-8a0c-4305-b449-4f64f2370503" />
 <img width="1328" height="747" alt="image" src="https://github.com/user-attachments/assets/67736d0c-3748-4be7-a033-24b098296a40" />
 
-<img width="1355" height="852" alt="image" src="https://github.com/user-attachments/assets/731ce006-8977-4137-b85c-9bdc18cd0e4f" />
+<img width="1355" height="852" alt="image" src="https://github.com/user-attachments/assets/e0db2013-cb0f-4cad-97c2-3d3316c21b1a" />
+
 
 
 
