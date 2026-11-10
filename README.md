@@ -52,3 +52,9 @@ Pending: run eval/run_ablation.py and paste the table here.
 
 ## Data and attribution
 `examples/sample/source.txt` is a repository-authored sample text. The repository contains no external source citation or separate licence metadata for it.
+
+<img width="1398" height="888" alt="image" src="https://github.com/user-attachments/assets/614641fe-8a0c-4305-b449-4f64f2370503" />
+<img width="1328" height="747" alt="image" src="https://github.com/user-attachments/assets/67736d0c-3748-4be7-a033-24b098296a40" />
+
+<img width="1398" height="750" alt="image" src="https://github.com/user-attachments/assets/b3587731-4ab3-4c13-bbcf-91f99fc1107e" />
+
