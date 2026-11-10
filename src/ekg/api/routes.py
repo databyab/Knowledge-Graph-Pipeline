@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from ekg.api.security import IpRateLimiter, require_api_key, require_write_rate
+from ekg.extract.extractor import ExtractionError
 from ekg.schemas import Graph
 from ekg.settings import EnvSettings, load_yaml
 from ekg.store.sqlite_store import SQLiteStore
@@ -44,6 +45,16 @@ class GraphService:
             self.store.save_share(share_id, graph_id)
             self.shares[graph_id] = share_id
             self.statuses[graph_id] = "completed"
+        except ExtractionError as exc:
+            LOGGER.error(
+                "graph build failed: ExtractionError reason=%s raw_triples=%d dropped=%s finish_reason=%s truncated=%s",
+                exc.reason,
+                exc.raw_triples,
+                exc.dropped,
+                exc.finish_reason,
+                exc.truncated,
+            )
+            self.statuses[graph_id] = "failed"
         except (OSError, RuntimeError, ValueError, sqlite3.Error) as exc:
             LOGGER.error("graph build failed: %s", type(exc).__name__)
             self.statuses[graph_id] = "failed"

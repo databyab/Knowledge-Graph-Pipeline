@@ -27,3 +27,7 @@ class GeminiClient(LLMClient):
         value = cast(str, response.text or "[]").strip()
         self.cache.put(key, value)
         return value
+
+    def invalidate(self, system: str, user: str) -> None:
+        key = self.cache.key("gemini", self.model, PROMPT_VERSION, system, user)
+        self.cache.delete(key)

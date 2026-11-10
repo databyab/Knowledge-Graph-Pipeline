@@ -25,3 +25,8 @@ class ResponseCache:
         with self.lock:
             self.connection.execute("INSERT OR REPLACE INTO responses(key, value) VALUES (?, ?)", (key, value))
             self.connection.commit()
+
+    def delete(self, key: str) -> None:
+        with self.lock:
+            self.connection.execute("DELETE FROM responses WHERE key = ?", (key,))
+            self.connection.commit()

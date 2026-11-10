@@ -10,6 +10,9 @@ const status = document.querySelector("#status");
 const error = document.querySelector("#error");
 const share = document.querySelector("#share");
 const maxInputChars = Number(document.body.dataset.maxInputChars);
+const buildTimeoutMs = 5 * 60 * 1000;
+const requestTimeoutMs = 10 * 1000;
+let isBuilding = false;
 
 function updateCounter() {
   counter.textContent = `${text.value.length} / ${maxInputChars}`;
@@ -41,38 +44,54 @@ async function readEntityConfig() {
   return parseEntityConfig(await entityConfig.files[0].text());
 }
 
+async function fetchJsonWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {...options, signal: controller.signal});
+    const body = await response.json();
+    return {response, body};
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function showError() {
   error.textContent = "The graph could not be built. Check the API key and try again.";
 }
 
 async function pollGraph(id, key) {
-  const deadline = Date.now() + 5 * 60 * 1000;
-  while (Date.now() < deadline) {
-    const response = await fetch(`/v1/graphs/${encodeURIComponent(id)}`, {headers: {"X-API-Key": key}});
+  const deadline = Date.now() + buildTimeoutMs;
+  while (true) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error("build timed out");
+    const {response, body: result} = await fetchJsonWithTimeout(`/v1/graphs/${encodeURIComponent(id)}`, {headers: {"X-API-Key": key}}, Math.min(requestTimeoutMs, remaining));
     if (!response.ok) throw new Error("status request failed");
-    const result = await response.json();
     status.textContent = result.status;
     if (result.status === "completed") return result;
     if (!["queued", "running"].includes(result.status)) throw new Error("build failed");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, Math.max(0, Math.min(2000, deadline - Date.now()))));
   }
-  throw new Error("build timed out");
 }
 
 async function submit(event) {
   event.preventDefault();
+  if (isBuilding) return;
+  isBuilding = true;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
   error.textContent = "";
   share.textContent = "";
   status.textContent = "queued";
   const key = apiKey.value;
   try {
     const payload = {text: text.value, context: context.value || undefined, entity_config: await readEntityConfig()};
-    const response = await fetch("/v1/graphs", {method: "POST", headers: {"Content-Type": "application/json", "X-API-Key": key}, body: JSON.stringify(payload)});
+    const {response, body: result} = await fetchJsonWithTimeout("/v1/graphs", {method: "POST", headers: {"Content-Type": "application/json", "X-API-Key": key}, body: JSON.stringify(payload)}, requestTimeoutMs);
     if (!response.ok) throw new Error("build request failed");
-    const result = await pollGraph((await response.json()).id, key);
-    render(result.graph, document);
+    const completed = await pollGraph(result.id, key);
+    render(completed.graph, document);
     const link = document.createElement("a");
-    link.href = `/g/${encodeURIComponent(result.share_id)}`;
+    link.href = `/g/${encodeURIComponent(completed.share_id)}`;
     link.textContent = `Share graph: ${window.location.origin}${link.pathname}`;
     share.replaceChildren(link);
     text.value = "";
@@ -81,6 +100,9 @@ async function submit(event) {
   } catch (_error) {
     status.textContent = "failed";
     showError();
+  } finally {
+    isBuilding = false;
+    submitButton.disabled = false;
   }
 }
 

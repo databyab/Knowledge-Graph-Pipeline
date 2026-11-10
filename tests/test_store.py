@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+from ekg.llm.cache import ResponseCache
 from ekg.schemas import Edge, Entity, Graph
 from ekg.store.neo4j_store import Neo4jStore
 from ekg.store.sqlite_store import SQLiteStore
@@ -58,6 +59,13 @@ def test_sqlite_store_round_trip(tmp_path: Path) -> None:
     graph = Graph(entities=[Entity(id="<hostile>", name="<hostile>", type="Person")], edges=[])
     store.save_graph("graph", graph)
     assert store.get_graph("graph") == graph
+
+
+def test_response_cache_deletes_invalid_entry(tmp_path: Path) -> None:
+    cache = ResponseCache(tmp_path / "responses.db")
+    cache.put("key", "not JSON")
+    cache.delete("key")
+    assert cache.get("key") is None
 
 
 def test_neo4j_graphs_are_scoped_by_graph_id() -> None:

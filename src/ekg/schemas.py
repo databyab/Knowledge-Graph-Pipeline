@@ -12,6 +12,7 @@ class Chunk(BaseModel):
 class EntityRef(BaseModel):
     name: str
     type: str
+    same_as: list[str] = Field(default_factory=list)
 
 
 class Triple(BaseModel):

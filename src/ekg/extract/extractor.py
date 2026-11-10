@@ -13,7 +13,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ExtractionError(ValueError):
-    pass
+    def __init__(self, reason: str, raw_triples: int, dropped: dict[str, int], finish_reason: str | None, truncated: bool) -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.raw_triples = raw_triples
+        self.dropped = dropped
+        self.finish_reason = finish_reason
+        self.truncated = truncated
 
 
 @dataclass(frozen=True)
@@ -63,25 +69,56 @@ def extract_triples(client: LLMClient, chunk: Chunk, ontology: dict[str, object]
 def extract_triples_report(client: LLMClient, chunk: Chunk, ontology: dict[str, object], use_ontology: bool, max_retries: int) -> ExtractionReport:
     relations = set(ontology.get("relations", {}))
     system = make_system(ontology)
-    error: str | None = None
+    error = "extraction_failed"
     raw_triples = 0
-    dropped = {"schema_invalid": 0, "relation_not_in_ontology": 0, "evidence_not_substring": 0}
+    dropped = {"schema_invalid": 0, "entity_name_invalid": 0, "relation_not_in_ontology": 0, "evidence_not_substring": 0}
+    finish_reason: str | None = None
+    truncated = False
     for _ in range(max_retries + 1):
+        raw_triples = 0
+        user = make_user(chunk.text, error)
         try:
-            raw = client.complete(system, make_user(chunk.text, error))
+            raw = client.complete(system, user)
+            finish_reason = getattr(client, "last_finish_reason", None)
+            truncated = bool(getattr(client, "last_truncated", False))
             normalized = normalize_response_shape(parse_json_response(raw))
             raw_triples = len(normalized) if isinstance(normalized, list) else 0
             values = TypeAdapter(list[Triple]).validate_python(normalized)
             for triple in values:
                 if use_ontology and triple.relation not in relations:
                     dropped["relation_not_in_ontology"] += 1
-                    raise ExtractionError("relation is not in ontology")
+                    raise ExtractionError("relation_not_in_ontology", raw_triples, dropped, finish_reason, truncated)
                 if triple.evidence not in chunk.text:
                     dropped["evidence_not_substring"] += 1
-                    raise ExtractionError("evidence is not a substring")
-            return ExtractionReport(values, raw_triples, dropped, getattr(client, "last_finish_reason", None), bool(getattr(client, "last_truncated", False)))
-        except (json.JSONDecodeError, ValidationError, ExtractionError) as exc:
-            if isinstance(exc, ValidationError):
-                dropped["schema_invalid"] += raw_triples
-            error = str(exc)
-    raise ExtractionError(error or "extraction failed")
+                    raise ExtractionError("evidence_not_substring", raw_triples, dropped, finish_reason, truncated)
+            accepted = []
+            for triple in values:
+                head_valid = valid_entity_name(triple.head.name, triple.head.type) and all(
+                    valid_entity_name(alias, triple.head.type) for alias in triple.head.same_as
+                )
+                tail_valid = valid_entity_name(triple.tail.name, triple.tail.type) and all(
+                    valid_entity_name(alias, triple.tail.type) for alias in triple.tail.same_as
+                )
+                if not head_valid or not tail_valid:
+                    dropped["entity_name_invalid"] += 1
+                else:
+                    accepted.append(triple)
+            return ExtractionReport(accepted, raw_triples, dropped, getattr(client, "last_finish_reason", None), bool(getattr(client, "last_truncated", False)))
+        except json.JSONDecodeError:
+            client.invalidate(system, user)
+            error = "json_invalid"
+        except ValidationError:
+            client.invalidate(system, user)
+            dropped["schema_invalid"] += raw_triples
+            error = "schema_invalid"
+        except ExtractionError as exc:
+            client.invalidate(system, user)
+            error = exc.reason
+    raise ExtractionError(error, raw_triples, dropped, finish_reason, truncated)
+
+
+def valid_entity_name(name: str, entity_type: str) -> bool:
+    words = name.split()
+    return bool(words) and len(words) <= 5 and (
+        entity_type != "Event" or name[0].isupper() or name[0].isdigit()
+    )

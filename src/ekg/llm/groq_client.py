@@ -30,3 +30,7 @@ class GroqClient(LLMClient):
         value = cast(str, response.choices[0].message.content or "[]").strip()
         self.cache.put(key, value)
         return value
+
+    def invalidate(self, system: str, user: str) -> None:
+        key = self.cache.key("groq", self.model, PROMPT_VERSION, system, user)
+        self.cache.delete(key)

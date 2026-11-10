@@ -10,5 +10,5 @@ max_chunks: 500
 request_body_limit: 120000
 rpm: 30
 tpm: 60000
-max_output_tokens: 2048
+max_output_tokens: 4096
 timeout_seconds: 30

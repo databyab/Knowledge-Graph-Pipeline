@@ -12,4 +12,8 @@ relations:
   MENTORED: {domain: [Person], range: [Person]}
   CAUSED: {domain: [Person, Organization, Event], range: [Event]}
   PRECEDED: {domain: [Event], range: [Event]}
-  VARIANT_OF: {domain: [same], range: [same]}
+  ATTENDED: {domain: [Person], range: [Organization]}
+  LEADS: {domain: [Person, Organization], range: [Organization]}
+  KNOWS: {domain: [Person], range: [Person]}
+  TRAVELLED_TO: {domain: [Person], range: [Location]}
+  PARENT_OF: {domain: [Person], range: [Person]}
