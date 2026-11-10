@@ -1,0 +1,14 @@
+provider: groq
+chunk_words: 100
+sentence_overlap: 1
+max_retries: 2
+use_ontology: true
+er_high_threshold: 0.88
+er_low_threshold: 0.55
+max_input_chars: 100000
+max_chunks: 500
+request_body_limit: 120000
+rpm: 30
+tpm: 60000
+max_output_tokens: 2048
+timeout_seconds: 30

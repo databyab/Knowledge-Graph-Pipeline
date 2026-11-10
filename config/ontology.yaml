@@ -1,0 +1,15 @@
+entity_types: [Person, Organization, Location, Event, Artifact, Work, Concept]
+relations:
+  MEMBER_OF: {domain: [Person], range: [Organization]}
+  PART_OF: {domain: [same], range: [same]}
+  LOCATED_IN: {domain: [Person, Organization, Event, Artifact], range: [Location]}
+  CREATED: {domain: [Person, Organization], range: [Artifact, Work, Concept]}
+  OWNS: {domain: [Person, Organization], range: [Artifact, Organization]}
+  PARTICIPATED_IN: {domain: [Person, Organization], range: [Event]}
+  ALLY_OF: {domain: [Person, Organization], range: [Person, Organization]}
+  OPPOSES: {domain: [Person, Organization], range: [Person, Organization]}
+  FAMILY_OF: {domain: [Person], range: [Person]}
+  MENTORED: {domain: [Person], range: [Person]}
+  CAUSED: {domain: [Person, Organization, Event], range: [Event]}
+  PRECEDED: {domain: [Event], range: [Event]}
+  VARIANT_OF: {domain: [same], range: [same]}

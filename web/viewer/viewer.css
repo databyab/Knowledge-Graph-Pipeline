@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+body { background: #f4f7fb; color: #172033; font-family: system-ui, sans-serif; margin: 0; }
+main { margin: 0 auto; max-width: 1100px; padding: 2rem; }
+h1 { margin: 0 0 1.5rem; }
+form { background: #fff; border: 1px solid #d7deea; border-radius: 0.75rem; display: grid; gap: 0.6rem; padding: 1.25rem; }
+label { font-weight: 650; margin-top: 0.5rem; }
+textarea, input { border: 1px solid #aeb9ca; border-radius: 0.4rem; font: inherit; padding: 0.65rem; width: 100%; }
+textarea { min-height: 13rem; resize: vertical; }
+button { background: #2257c7; border: 0; border-radius: 0.4rem; color: #fff; cursor: pointer; font: inherit; font-weight: 650; margin-top: 0.8rem; padding: 0.7rem 1rem; }
+button:hover { background: #19459f; }
+output, #status { color: #536176; font-size: 0.9rem; }
+#error { color: #b42318; font-weight: 600; }
+#share a { color: #2257c7; }
+#graph { background: #fff; border: 1px solid #aeb9ca; border-radius: 0.75rem; height: 70vh; margin-top: 1.5rem; }
+#evidence { background: #fff; border: 1px solid #d7deea; border-radius: 0.5rem; margin-top: 1rem; min-height: 2rem; padding: 1rem; white-space: pre-wrap; }

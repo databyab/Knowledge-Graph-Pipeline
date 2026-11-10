@@ -1,0 +1,6 @@
+- provider: groq
+  model_env: GROQ_MODEL
+  prompt_version: v1
+  use_ontology: true
+  use_er: true
+  chunk_words: 180
